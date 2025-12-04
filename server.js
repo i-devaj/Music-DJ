@@ -28,16 +28,44 @@ const supabase = createClient(
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Initialize Redis for caching
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+// Initialize Redis for caching (optional)
+let redis = null;
 
-// Configure Multer for in-memory file storage. This is more efficient
-// as it avoids writing the file to disk on the server before uploading to Supabase.
+if (process.env.REDIS_URL) {
+  redis = new Redis(process.env.REDIS_URL);
+
+  redis.on('connect', () => {
+    console.log('Connected to Redis');
+  });
+
+  redis.on('error', (err) => {
+    console.error('Redis error:', err);
+  });
+} else {
+  console.log('No REDIS_URL set – running without Redis cache');
+}
+
+// Simple cache helper that no-ops if Redis is not configured
+const cache = {
+  async get(key) {
+    if (!redis) return null;
+    return redis.get(key);
+  },
+  async setJSON(key, ttlSeconds, value) {
+    if (!redis) return;
+    await redis.setex(key, ttlSeconds, JSON.stringify(value));
+  },
+  async del(key) {
+    if (!redis) return;
+    await redis.del(key);
+  }
+};
+
+// Configure Multer for in-memory file storage.
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    // A more specific check for common audio formats
     const allowedTypes = [
       'audio/mpeg', // .mp3
       'audio/wav',  // .wav
@@ -165,7 +193,6 @@ app.post('/api/playlists/generate', async (req, res) => {
 
     // Call Gemini API
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
-    // const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
     
     const prompt = `You are a professional DJ creating a music playlist based on mood.
 
@@ -251,7 +278,6 @@ Important:
 
       playlistTracks.push({
         ...track,
-        // The URL will be constructed on the frontend to point to our proxy
         weight: selectedTrack.weight,
         reason: selectedTrack.reason,
         position: i + 1
@@ -259,7 +285,7 @@ Important:
     }
 
     // Invalidate cache
-    await redis.del('top-tracks');
+    await cache.del('top-tracks');
 
     res.json({
       id: playlist.id,
@@ -284,7 +310,7 @@ app.get('/api/stats/top-tracks', async (req, res) => {
 
     // Check cache first
     const cacheKey = 'top-tracks';
-    const cached = await redis.get(cacheKey);
+    const cached = await cache.get(cacheKey);
 
     if (cached) {
       console.log('Returning cached top tracks');
@@ -302,7 +328,7 @@ app.get('/api/stats/top-tracks', async (req, res) => {
     if (error) throw error;
 
     // Cache for 5 minutes (300 seconds)
-    await redis.setex(cacheKey, 300, JSON.stringify(topTracks));
+    await cache.setJSON(cacheKey, 300, topTracks);
 
     res.json(topTracks);
   } catch (error) {
@@ -382,7 +408,6 @@ app.delete('/api/tracks/:id', async (req, res) => {
       .remove([track.storage_path]);
 
     if (storageError) {
-      // Log the error but proceed to delete from DB anyway, as the file might already be gone
       console.error('Storage deletion error (might be benign):', storageError.message);
     }
 
@@ -391,7 +416,7 @@ app.delete('/api/tracks/:id', async (req, res) => {
     if (dbError) throw dbError;
 
     // Invalidate the top-tracks cache since a track has been removed
-    await redis.del('top-tracks');
+    await cache.del('top-tracks');
 
     res.status(200).json({ message: 'Track deleted successfully' });
   } catch (error) {
@@ -424,9 +449,8 @@ app.get('/api/tracks/stream/:id', async (req, res) => {
 
     const contentType = getContentTypeByExtension(track.original_name);
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', 'inline'); // Ensure browser plays the file
+    res.setHeader('Content-Disposition', 'inline');
 
-    // Convert Blob to Buffer and send
     const buffer = Buffer.from(await data.arrayBuffer());
     res.send(buffer);
 
@@ -441,7 +465,6 @@ app.delete('/api/playlists/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Delete the playlist record from the database
     const { error: dbError } = await supabase.from('playlists').delete().eq('id', id);
     if (dbError) throw dbError;
 
@@ -452,12 +475,7 @@ app.delete('/api/playlists/:id', async (req, res) => {
   }
 });
 
-
-
-
-
-
-// ==================== SERVE FRONTEND ====================
+// ==================== SERVE FRONTEND (optional if using Vercel for frontend) ====================
 
 // These lines are needed for __dirname in ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -472,11 +490,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-// The "catchall" handler: for any request that doesn't
-// match one of the API routes above, send back React's index.html file.
+// Catchall: send back React's index.html for non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
 });
 
-// Export the app for Vercel
+// Start server (for Railway)
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// Export app if you ever need it for testing
 export default app;
