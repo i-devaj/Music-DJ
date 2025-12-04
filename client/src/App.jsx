@@ -53,9 +53,16 @@ const App = () => {
   const fileInputRef = useRef(null);
 
   // Use environment variable for the API URL, with a fallback for development
-  const API_URL = import.meta.env.VITE_API_URL 
-  ? `${import.meta.env.VITE_API_URL}/api`
-  : 'http://localhost:3003/api';
+  // Build API base URL
+  const raw = import.meta.env.VITE_API_URL || "http://localhost:3003";
+
+    // Normalize it (remove trailing slash if user accidentally added one)
+  const API_BASE = raw.replace(/\/+$/, "");
+
+  // Final API prefix
+   const API_URL = `${API_BASE}/api`;
+
+  
 
   // --- Notification Handler ---
   const notificationTimeoutRef = useRef(null);
