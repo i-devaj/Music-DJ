@@ -378,7 +378,7 @@ const App = () => {
   console.log(`%c[DEBUG] Component rendering. Current track URL: ${currentTrackUrl}`, 'color: cyan');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6">
       {/* Persistent Audio Element - moved to top level to prevent unmounting on tab change */}
       <audio
         ref={audioRef}
@@ -398,22 +398,22 @@ const App = () => {
         onDismiss={() => setNotification({ message: '', type: '' })}
       />
       
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto flex flex-col flex-grow">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-2 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
             Music Mood DJ
           </h1>
           <p className="text-blue-200">AI-Powered Playlist Generation</p>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex justify-center mb-6 space-x-4">
+        <div className="flex justify-center flex-wrap gap-2 sm:gap-4 mb-6">
           {['upload', 'generate', 'player', 'playlists', 'stats'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${
+              className={`px-4 sm:px-6 py-2 rounded-lg font-medium transition-all ${
                 activeTab === tab
                   ? 'bg-purple-600 shadow-lg'
                   : 'bg-purple-900/30 hover:bg-purple-800/50'
@@ -426,13 +426,13 @@ const App = () => {
 
         {/* Upload Section */}
         {activeTab === 'upload' && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl">
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 shadow-2xl flex-grow">
             <div className="flex items-center mb-6">
               <Upload className="mr-3 text-pink-400" size={28} />
               <h2 className="text-2xl font-bold">Upload Music</h2>
             </div>
             
-            <div className="border-2 border-dashed border-purple-400 rounded-xl p-12 text-center hover:border-pink-400 transition-colors">
+            <div className="border-2 border-dashed border-purple-400 rounded-xl p-8 sm:p-12 text-center hover:border-pink-400 transition-colors">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -484,7 +484,7 @@ const App = () => {
 
         {/* Generate Playlist Section */}
         {activeTab === 'generate' && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl">
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 shadow-2xl flex-grow">
             <div className="flex items-center mb-6">
               <Sparkles className="mr-3 text-yellow-400" size={28} />
               <h2 className="text-2xl font-bold">Generate Mood Playlist</h2>
@@ -544,7 +544,7 @@ const App = () => {
 
         {/* Player Section */}
         {activeTab === 'player' && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl">
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 shadow-2xl flex-grow">
             <div className="flex items-center mb-6">
               <Play className="mr-3 text-green-400" size={28} />
               <h2 className="text-2xl font-bold">Now Playing</h2>
@@ -641,7 +641,7 @@ const App = () => {
 
         {/* Playlists Section */}
         {activeTab === 'playlists' && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl">
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 shadow-2xl flex-grow">
 
             <div className="flex items-center mb-6">
               <Music className="mr-3 text-blue-400" size={28} />
@@ -707,7 +707,7 @@ const App = () => {
 
         {/* Statistics Section */}
         {activeTab === 'stats' && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl">
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 shadow-2xl flex-grow">
             <div className="flex items-center mb-6">
               <TrendingUp className="mr-3 text-green-400" size={28} />
               <h2 className="text-2xl font-bold">Top Tracks</h2>
@@ -750,7 +750,7 @@ const App = () => {
         )}
 
         {/* Footer */}
-        <div className="text-center mt-8 text-purple-300 text-sm">
+        <div className="text-center mt-auto pt-8 text-purple-300 text-sm">
           <p>Built by i-devaj</p>
         </div>
         </div>
