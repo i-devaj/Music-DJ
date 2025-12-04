@@ -478,8 +478,5 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🎵 Music Mood DJ API running on port ${PORT}`);
-  console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
-});
+// Export the app for Vercel
+export default app;
