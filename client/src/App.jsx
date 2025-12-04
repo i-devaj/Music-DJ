@@ -53,7 +53,9 @@ const App = () => {
   const fileInputRef = useRef(null);
 
   // Use environment variable for the API URL, with a fallback for development
-  const API_URL = import.meta.env.PROD ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3003/api');
+  const API_URL = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : 'http://localhost:3003/api';
 
   // --- Notification Handler ---
   const notificationTimeoutRef = useRef(null);
