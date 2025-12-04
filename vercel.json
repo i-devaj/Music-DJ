@@ -1,0 +1,9 @@
+{
+    "rewrites": [
+      {
+        "source": "/api/(.*)",
+        "destination": "https://music-dj-production.up.railway.app/api/$1"
+      }
+    ]
+  }
+  
